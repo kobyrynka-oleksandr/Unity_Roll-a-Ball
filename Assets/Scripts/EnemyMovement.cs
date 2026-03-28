@@ -3,16 +3,20 @@ using UnityEngine.AI;
 
 public class EnemyMovement : MonoBehaviour
 {
-    public Transform player;
+    [SerializeField] private Transform player;
 
     private NavMeshAgent navMeshAgent;
 
-    void Start()
+    private void Start()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
+        if (player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        }
     }
 
-    void Update()
+    private void Update()
     {
         if (player != null)
         {

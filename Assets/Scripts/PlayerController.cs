@@ -1,71 +1,44 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using TMPro;
+
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 0;
-
-    public TextMeshProUGUI countText;
-    public GameObject winTextObject;
+    [SerializeField] private float speed = 5f;
 
     private Rigidbody rb;
+    private Vector2 movementInput;
 
-    private float movementX;
-    private float movementY;
-
-    private int count;
-
-    void Start()
+    private void Start()
     {
-        winTextObject.SetActive(false);
-        count = 0;
         rb = GetComponent<Rigidbody>();
-        SetCountText();
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        Vector3 movement = new Vector3(movementX, 0.0f, movementY);
-
+        Vector3 movement = new Vector3(movementInput.x, 0f, movementInput.y);
         rb.AddForce(movement * speed * Time.fixedDeltaTime);
     }
 
-    void OnMove(InputValue movementValue)
+    public void OnMove(InputValue movementValue)
     {
-        Vector2 movementVector = movementValue.Get<Vector2>();
-
-        movementX = movementVector.x;
-        movementY = movementVector.y;
+        movementInput = movementValue.Get<Vector2>();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("PickUp"))
+        if (other.TryGetComponent<Pickup>(out Pickup pickup))
         {
-            other.gameObject.SetActive(false);
-            count++;
-            SetCountText();
-        }
-    }
-    void SetCountText()
-    {
-        countText.text = "Count: " + count.ToString();
-
-        if (count >= 14)
-        {
-            winTextObject.SetActive(true);
-            Destroy(GameObject.FindGameObjectWithTag("Enemy"));
+            pickup.PlayPickupSoundAndParticle();
+            pickup.gameObject.SetActive(false);
+            GameEvents.OnPickupCollectedEvent();
         }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Enemy"))
+        if (collision.gameObject.CompareTag("Enemy") || collision.gameObject.CompareTag("KillZone"))
         {
-            Destroy(gameObject);
-
-            winTextObject.gameObject.SetActive(true);
-            winTextObject.GetComponent<TextMeshProUGUI>().text = "You Lose!";
+            GameEvents.OnPlayerDiedEvent();
         }
     }
 }
